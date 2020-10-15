@@ -35,9 +35,9 @@ The agenda for the workshop looks as follows:
  * Useful labels
  * Troubleshooting OpenSCAP
 
- ### Creating your own ProfileBundles
+### Creating your own ProfileBundles
 
- ### Writing your own rules
+### Writing your own rules
 
 Prerequisites
 -------------
