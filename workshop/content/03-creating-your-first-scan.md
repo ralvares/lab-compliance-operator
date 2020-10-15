@@ -28,6 +28,12 @@ usability:
 
 By default, the Compliance Operator creates two `profilebundle` objects, one for
 OCP and one for RHCOS based on the [upstream ComplianceAsCode content images](https://quay.io/repository/complianceascode/ocp4):
+
+```execute
+oc get profilebundle.compliance
+```
+
+You should see output similar to the one below:
 ```
 $ oc get profilebundle.compliance
 NAME     CONTENTIMAGE                           STATUS
@@ -37,6 +43,12 @@ rhcos4   quay.io/complianceascode/ocp4:latest   VALID
 
 Inspecting the ProfileBundle objects, you'll see that they mostly point to the
 content image and a file inside the image, relative to the root directory:
+
+```execute
+oc get profilebundle.compliance rhcos4 -o yaml
+```
+
+Normally you should see output similar to the one below:
 ```
 $ oc get profilebundle.compliance rhcos4 -o yaml
 apiVersion: compliance.openshift.io/v1alpha1
@@ -52,12 +64,17 @@ spec:
 status:
   dataStreamStatus: VALID
 ```
+
 The `status.dataStreamStatus` field is set by the operator and reflects
 the result of the content parsing.
 
 Several `Profile` objects are parsed out of each bundle, for the `rhcos4` bundle we'd have:
+```execute
+oc get profile.compliance -lcompliance.openshift.io/profile-bundle=rhcos4  -n openshift-compliance
 ```
-$ oc get profile.compliance -lcompliance.openshift.io/profile-bundle=rhcos4  -nopenshift-compliance
+
+```
+oc get profile.compliance -lcompliance.openshift.io/profile-bundle=rhcos4  -n openshift-compliance
 NAME              AGE
 rhcos4-e8         5h2m
 rhcos4-moderate   5h2m
@@ -66,8 +83,13 @@ rhcos4-ncp        5h2m
 
 For the rest of the chapter we'll be working with the `e8` profile. Inspecting
 the profile shows the following:
+
+```execute
+oc get profile.compliance rhcos4-e8 -o yaml
 ```
-$ oc get profile.compliance rhcos4-e8 -o yaml
+
+You should see output similar to the one below:
+```
 apiVersion: compliance.openshift.io/v1alpha1
 description: |-
   This profile contains configuration checks for Red Hat Enterprise Linux CoreOS
@@ -139,9 +161,11 @@ platform that this profile targets, in this case it's RHCOS 4.
 Finally and most importantly, the profile includes a large number of compliance
 rules that actually comprise the profile. We're going to explore the
 rules next. To view a rule, call:
+
+```execute
+oc get rule.compliance rhcos4-accounts-no-uid-except-zero -n openshift-compliance -oyaml
 ```
-$ oc get rule.compliance rhcos4-accounts-no-uid-except-zero -nopenshift-compliance -oyaml
-```
+
 The (trimmed) result looks somewhat like:
 ```
 $ oc get rule.compliance rhcos4-accounts-no-uid-except-zero -o yaml
@@ -190,8 +214,9 @@ profile actually does. Before actually creating the scan, we also need to
 think about settings of the scan - how often we want to run it, what amount
 of storage to dedicate to the scan results, and so on. This is what the
 `ScanSetting` object is for. Let's see an example:
-```
-$ cat << EOF > periodic-setting.yaml
+
+```execute
+cat << EOF > periodic-setting.yaml
 apiVersion: compliance.openshift.io/v1alpha1
 kind: ScanSetting
 metadata:
@@ -226,8 +251,9 @@ might themselves use different profiles.
 The scan itself, or the intent of the scan is expressed using the
 `ScanSettingBinding` object. The following example shows an example
 of defining the scan for the `e8` profile we were exploring earlier:
-```
-$ cat << EOF > periodic-e8.yaml
+
+```execute
+cat << EOF > periodic-e8.yaml
 apiVersion: compliance.openshift.io/v1alpha1
 kind: ScanSettingBinding
 metadata:
@@ -259,11 +285,13 @@ There are two important pieces of a `ScanSettingBinding` object:
 
 Save both the `ScanSetting` and the `ScanSettingBinding` manifests to a
 file and create them:
+
+```execute
+oc create -f periodic-setting.yaml
 ```
-$ oc create -f periodic-setting.yaml
-scansetting.compliance.openshift.io/periodic-setting created
-$ oc create -f periodic-e8.yaml
-scansettingbinding.compliance.openshift.io/periodic-e8 created
+
+```execute
+oc create -f periodic-e8.yaml
 ```
 
 > **NOTE**
@@ -272,22 +300,25 @@ scansettingbinding.compliance.openshift.io/periodic-e8 created
 > it's also possible to create `ScanSettingBindings` using the subcommand
 > `oc compliance bind`. For this example, the invocation would have been:
 > 
-> ```
-> $ oc compliance bind --name periodic-e8 --settings periodic-setting \
->     profile/rhcos4-e8 profile/ocp4-e8
+> ```execute
+> oc compliance bind --name periodic-e8 --settings periodic-setting profile/rhcos4-e8 profile/ocp4-e8
 > ```
 >
 > For more information on this command, do:
-> ```
-> $ oc compliance bind -h
+> ```execute
+> oc compliance bind -h
 > ```
 
 
 The Compliance Operator takes these two objects and generates a
 `ComplianceSuite` object that references a `ComplianceScan` object for each
 role of a Node scan and one for the Platform scan:
+```execute
+oc get compliancesuite -n openshift-compliance
 ```
-$ oc get compliancesuite -nopenshift-compliance
+
+The result looks somewhat like:
+```
 NAME                                  PHASE     RESULT
 periodic-e8   			      RUNNING   NOT-AVAILABLE
 $ oc get compliancescan -nopenshift-compliance
@@ -327,10 +358,16 @@ Events:
 Once the scans are finished, we can take a look at the scan results.
 Those are represented as the CustomResource `compliancecheckresult`
 and labeled with the scan name:
+```execute
+oc get compliancecheckresults -nopenshift-compliance -lcompliance.openshift.io/scan-name=ocp4-e8
 ```
-$ oc get compliancecheckresults -nopenshift-compliance -lcompliance.openshift.io/scan-name=ocp4-e8
-$ oc get compliancecheckresults -nopenshift-compliance -lcompliance.openshift.io/scan-name=rhcos4-e8-master
-$ oc get compliancecheckresults -nopenshift-compliance -lcompliance.openshift.io/scan-name=rhcos4-e8-worker
+
+```execute
+oc get compliancecheckresults -nopenshift-compliance -lcompliance.openshift.io/scan-name=rhcos4-e8-master
+```
+
+```execute
+oc get compliancecheckresults -nopenshift-compliance -lcompliance.openshift.io/scan-name=rhcos4-e8-worker
 ```
 
 The attributes of the `ComplianceCheckResult` columns contain the result
@@ -338,9 +375,12 @@ of the check (typically `PASS` or `FAIL`) and the severity of the check.
 The metadata links the check with the scan or suite through labels. The 
 labels also contain the check result and severity so that you can filter
 only checks with a certain result or severity:
+```execute
+oc get compliancecheckresults -lcompliance.openshift.io/scan-name=ocp4-e8,compliance.openshift.io/check-status=FAIL
 ```
-$ oc get compliancecheckresults -lcompliance.openshift.io/scan-name=ocp4-e8,compliance.openshift.io/check-status=FAIL
-$ oc get compliancecheckresults -lcompliance.openshift.io/scan-name=ocp4-e8,compliance.openshift.io/check-severity=medium
+
+```execute
+oc get compliancecheckresults -lcompliance.openshift.io/scan-name=ocp4-e8,compliance.openshift.io/check-severity=medium
 ```
 
 Some failing checks must be remediated manually, while some can be
@@ -356,6 +396,10 @@ third-party tools. The ARF results are uploaded from the pods that actually
 perform the scans to a `PersistentVolume` and rotated according to the
 `rawResultStorage.rotation` parameter of the `ScanSetting` object. To see what
 `PersistentVolumeClaims` store the results, inspect the scan statuses:
+```execute
+oc get compliancescans -o jsonpath='{.items[*].status.resultsStorage}' | jq
+```
+
 ```
 $ oc get compliancescans -o jsonpath='{.items[*].status.resultsStorage}' | jq
 {
@@ -373,6 +417,10 @@ $ oc get compliancescans -o jsonpath='{.items[*].status.resultsStorage}' | jq
 ```
 
 You can then view the individual PVCs:
+```execute
+oc get pvc rhcos4-e8-master
+```
+
 ```
 $ oc get pvc rhcos4-e8-master
 NAME               STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
@@ -384,6 +432,7 @@ sleeps, then copy the files out of the PVC to a local filesystem.
 The pod definition could look like this:
 
 ```
+cat << EOF > pv-extract.yaml
 apiVersion: "v1"
 kind: Pod
 metadata:
@@ -400,24 +449,31 @@ spec:
     - name: master-scan-vol
       persistentVolumeClaim:
         claimName: rhcos4-e8-master
+EOF
 ```
 
 Copy this manifest, define the pod, then copy the results:
+
+```execute
+oc create -f pv-extract.yaml
 ```
-$ oc create -f pv-extract.yaml
-pod/pv-extract created
-$ oc cp pv-extract:/master-scan-results .
-tar: Removing leading `/' from member names
+
+```execute
+oc cp pv-extract:/master-scan-results .
 ```
+
 The results are stored in directories numbered sequentially with the
 number of the scan, up to the rotation policy, then reused:
+```execute
+ls
+```
+
 ```
 $ ls
 0  lost+found
 $ ls 0 
 openscap-pod-9294a45c73ef807cf82327f147f061fe3833eab7.xml.bzip2  openscap-pod-c41c6ef35a2ed0e442ae209120013ae708417c13.xml.bzip2  openscap-pod-e3f56090e7127d8499113d5188e2a83c18060007.xml.bzip2
 ```
-
 
 Note that spawning a pod that mounts the Persistent Volume will keep the claim
 as **Bound**. If the volume’s storage class that you’re using is
@@ -428,8 +484,8 @@ a pod and keep storing the results there.
 
 So, just do:
 
-```
-$ oc delete pod pv-extract
+```execute
+oc delete pod pv-extract
 ```
 
 Once you’re done with the extraction.
@@ -440,18 +496,22 @@ Once you’re done with the extraction.
 > it's also possible to extract the compliance results using the subcommand
 > `oc compliance fetch-raw`. For this example, the invocation would have been:
 > 
+> ```execute
+> mkdir results
 > ```
-> $ mkdir results
-> $ oc compliance fetch-raw scansettingbindings periodic-e8 -o results
+>
+> ```execute
+> oc compliance fetch-raw scansettingbindings periodic-e8 -o results
 > ```
+>
 > This will fetch the raw results to the directory called `results` and clean up
 > by itself.
 >
 > For more information on this command, do:
-> ```
-> $ oc compliance fetch-raw -h
+> ```execute
+> oc compliance fetch-raw -h
 > ```
 
 ***
 
-We can now move on to [working with remediations](04-remediations.md)
+We can now move on to Wwrking with remediations
