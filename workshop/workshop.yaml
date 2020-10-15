@@ -3,10 +3,13 @@ name: Using the Compliance Operator
 modules:
   activate:
     - index
-    - exercises/01-compliance-operator.md
-    - exercises/02-installation.md
-    - exercises/03-creating-your-first-scan.md
-    - exercises/04-remediations.md
-    - exercises/05-tailoring-profiles.md
-    - exercises/06-troubleshooting.md
+    - 01-compliance-operator
+    - 02-installation
+    - 03-creating-your-first-scan
+    - 04-remediations
+    - 05-tailoring-profiles
+    - 06-troubleshooting
+    - 07-content-setup
+    - 08-creating-profile-bundles
+    - 09-writing-rules
     - finish

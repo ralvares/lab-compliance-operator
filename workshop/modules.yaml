@@ -1,21 +1,27 @@
-config:
-  google_tracking_id: ''
 modules:
   index:
     name: Workshop Overview
     exit_sign: Start Workshop
-  exercises/01-compliance-operator.md:
+  01-compliance-operator:
     name: Operator Introduction & Prerequisites
-  exercises/02-installation.md:
+  02-installation:
     name: Installing the operator
-  exercises/03-creating-your-first-scan.md:
+  03-creating-your-first-scan:
     name: Creating your first compliance scan
-  exercises/04-remediations.md:
+  04-remediations:
     name: Working with remediations
-  exercises/05-tailoring-profiles.md:
+  05-tailoring-profiles:
     name: Tailoring profiles
-  exercises/06-troubleshooting.md:
+  06-troubleshooting:
     name: Troubleshooting
+  07-content-setup:
+    name: Creating new content
+  08-creating-profile-bundles:
+    name: Creating your own ProfileBundles
+  09-writing-rules:
+    name: Writing your own Rules
   finish:
     name: Workshop Summary
     exit_sign: Finish Workshop
+config:
+    template_engine: liquid.js
