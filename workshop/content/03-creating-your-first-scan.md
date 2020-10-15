@@ -30,12 +30,12 @@ By default, the Compliance Operator creates two `profilebundle` objects, one for
 OCP and one for RHCOS based on the [upstream ComplianceAsCode content images](https://quay.io/repository/complianceascode/ocp4):
 
 ```execute
-oc get profilebundle.compliance
+oc get profilebundle.compliance -n openshift-compliance
 ```
 
 You should see output similar to the one below:
 ```
-$ oc get profilebundle.compliance
+$ oc get profilebundle.compliance -n openshift-compliance
 NAME     CONTENTIMAGE                           STATUS
 ocp4     quay.io/complianceascode/ocp4:latest   VALID
 rhcos4   quay.io/complianceascode/ocp4:latest   VALID
@@ -45,12 +45,12 @@ Inspecting the ProfileBundle objects, you'll see that they mostly point to the
 content image and a file inside the image, relative to the root directory:
 
 ```execute
-oc get profilebundle.compliance rhcos4 -o yaml
+oc get profilebundle.compliance -n openshift-compliance rhcos4 -o yaml
 ```
 
 Normally you should see output similar to the one below:
 ```
-$ oc get profilebundle.compliance rhcos4 -o yaml
+$ oc get profilebundle.compliance -n openshift-compliance rhcos4 -o yaml
 apiVersion: compliance.openshift.io/v1alpha1
 kind: ProfileBundle
 metadata:
