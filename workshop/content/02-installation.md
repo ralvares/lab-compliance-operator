@@ -117,5 +117,4 @@ Kubernetes objects.
 
 ***
 
-At this point, the Compliance Operator is up and running and we can move on
-to [creating our first scan](03-creating-your-first-scan.md).
+At this point, the Compliance Operator is up and running and we can move on.
